@@ -310,79 +310,86 @@ st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
 # ─────────────────────────────────────────────
 # BOTTOM ROW: Transformation Journey + Summary
 # ─────────────────────────────────────────────
+import streamlit.components.v1 as components
+
+COMPONENT_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap');
+body { margin:0; padding:0; background:transparent; font-family:'DM Sans',sans-serif; color:#F0F0F0; }
+.panel { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:18px; }
+.panel-title { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:14px; }
+.pbar-track { height:4px; background:rgba(255,255,255,0.06); border-radius:2px; margin-top:4px; }
+.pbar-fill { height:100%; border-radius:2px; }
+</style>
+"""
+
 b1, b2 = st.columns([3, 2], gap="medium")
 
 with b1:
     phases_data = [
         {"label": "Foundation", "desc": "Infrastructure, tools & team setup", "done": True},
         {"label": "Building", "desc": "Automation pipelines & platform development", "done": True},
-        {"label": "Expanding", "desc": "Multi-channel activation & scaling", "done": False, "current": True},
-        {"label": "Scaling", "desc": "Full digital operations across the group", "done": False},
+        {"label": "Expanding", "desc": "Multi-channel activation & scaling", "current": True},
+        {"label": "Scaling", "desc": "Full digital operations across the group"},
     ]
-    phase_html = ""
+    rows = ""
     for i, p in enumerate(phases_data):
         if p.get("done"):
-            dot_style = f"background:#00E5A0;"
-            line_style = f"background:#00E5A0;"
-            label_color = "#00E5A0"
+            dot_bg = "#00E5A0"
+            lbl_c = "#00E5A0"
+            check = "✓"
         elif p.get("current"):
-            dot_style = f"background:#FF6B35;box-shadow:0 0 8px #FF6B3580;"
-            line_style = f"background:linear-gradient(90deg,#FF6B35 40%,rgba(255,255,255,0.08) 40%);"
-            label_color = "#FF6B35"
+            dot_bg = "#FF6B35"
+            lbl_c = "#FF6B35"
+            check = "●"
         else:
-            dot_style = f"background:rgba(255,255,255,0.12);"
-            line_style = f"background:rgba(255,255,255,0.06);"
-            label_color = "rgba(255,255,255,0.3)"
-
-        connector = ""
-        if i < len(phases_data) - 1:
-            connector = f'<div style="height:20px;margin-left:4px;width:2px;background:{"#00E5A0" if p.get("done") else "rgba(255,255,255,0.08)"};"></div>'
-
-        check = "✓" if p.get("done") else ("●" if p.get("current") else "○")
-        check_color = label_color
-
-        phase_html += f"""
+            dot_bg = "rgba(255,255,255,0.12)"
+            lbl_c = "rgba(255,255,255,0.3)"
+            check = "○"
+        line_bg = "#00E5A0" if p.get("done") else "rgba(255,255,255,0.08)"
+        connector = f'<div style="height:20px;margin-left:4px;width:2px;background:{line_bg};"></div>' if i < 3 else ""
+        glow = "box-shadow:0 0 8px #FF6B3580;" if p.get("current") else ""
+        rows += f"""
         <div style="display:flex;align-items:flex-start;gap:14px;">
-            <div style="display:flex;flex-direction:column;align-items:center;">
-                <div style="width:10px;height:10px;border-radius:50%;{dot_style}flex-shrink:0;margin-top:4px;"></div>
-                {connector}
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div style="width:10px;height:10px;border-radius:50%;background:{dot_bg};{glow}flex-shrink:0;margin-top:4px;"></div>
+            {connector}
+          </div>
+          <div style="padding-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:{lbl_c};">
+              <span style="color:{lbl_c};margin-right:6px;">{check}</span>{p['label']}
             </div>
-            <div style="padding-bottom:8px;">
-                <div style="font-size:13px;font-weight:700;color:{label_color} !important;">
-                    <span style="color:{check_color};margin-right:6px;">{check}</span>{p['label']}
-                </div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.35) !important;">{p['desc']}</div>
-            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);">{p['desc']}</div>
+          </div>
         </div>"""
 
-    st.markdown(
-        f"""<div class="panel">
+    components.html(
+        f"""{COMPONENT_CSS}
+        <div class="panel">
             <div class="panel-title">Transformation Journey</div>
-            {phase_html}
+            {rows}
         </div>""",
-        unsafe_allow_html=True,
+        height=260,
     )
 
 with b2:
-    # Goal progress summary bars
-    summary_html = ""
+    bars = ""
     for g in GOALS:
-        summary_html += f"""
+        bars += f"""
         <div style="margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                <span style="font-size:12px;color:rgba(255,255,255,0.6) !important;">{g['icon']}  {g['title']}</span>
-                <span style="font-size:13px;color:{g['color']};font-family:'JetBrains Mono',monospace;font-weight:700;">{g['progress']}%</span>
-            </div>
-            <div class="pbar-track">
-                <div class="pbar-fill" style="width:{g['progress']}%;background:{g['color']};"></div>
-            </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3) !important;margin-top:3px;">{g['phase']} phase · {len(g['achieved'])} milestones achieved</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:12px;color:rgba(255,255,255,0.6);">{g['icon']}  {g['title']}</span>
+            <span style="font-size:13px;color:{g['color']};font-family:'JetBrains Mono',monospace;font-weight:700;">{g['progress']}%</span>
+          </div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:{g['progress']}%;background:{g['color']};"></div></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">{g['phase']} phase · {len(g['achieved'])} milestones achieved</div>
         </div>"""
 
-    st.markdown(
-        f"""<div class="panel">
+    components.html(
+        f"""{COMPONENT_CSS}
+        <div class="panel">
             <div class="panel-title">Goal Progress Summary</div>
-            {summary_html}
+            {bars}
         </div>""",
-        unsafe_allow_html=True,
+        height=260,
     )
